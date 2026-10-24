@@ -15,6 +15,7 @@ My university courses: you turn class materials into notes, quiz me and check my
 ## Obsidian conventions
 
 - Every file in a subject, `raw/` included, is named with the slug prefix: wikilinks resolve by file name across the whole vault, and every subject has its own L03. No `# ^ [ ] |` in file names.
+- Nested list items are indented with a tab, not spaces: Obsidian renders space indents too narrow.
 - Internal links are wikilinks. Cite sources inline right after the paragraph or formula they support: `([[algo-L03-slides.pdf#page=12|с. 12]])`, `([[algo-L03-transcript|12:40]])` with the timestamp for recordings.
 - Note frontmatter:
   ```yaml
