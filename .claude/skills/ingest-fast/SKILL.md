@@ -11,15 +11,15 @@ Work without asking me anything: record doubts as `[?]` in the note and in the f
 3. New subject: create `subjects/s<N>-<slug>/` with `<slug>-course.md` from the template below, filling only what I told you, a mastery file with just the table header and an empty mistakes file.
 4. Move inputs into the subject's `raw/` as `<slug>-L03-<kind>.<ext>` (kind: `transcript`, `slides`, `handout`, `text`...). Copy instead of moving files from outside `_inbox/`. Save pasted text as a `.md` file in `raw/`. URLs go into the note's `links`; don't try to fetch videos.
 5. Process classes one at a time: read the class's sources in full (PDFs 20 pages per Read), write its note, then move to the next.
-6. Note `notes/<slug>-L03-<тема>.md`, frontmatter `ingest: fast`. It is a skeleton for revision that I read instead of the slides and the recording, not a retelling: conclusions without the reasoning that led to them; a 90-minute class usually fits in 400-800 words. Write for skimming on a phone. A defined term is its own paragraph starting with the term in bold. A connected explanation (why a rule exists, how A leads to B) is a paragraph of 1-3 short sentences. Bullets only for parallel items (kinds, properties, steps, anti-patterns), one fact each, about 100 characters, never several facts joined by `;`; a point with parts is a short parent bullet with nested ones. A comparison of two or three things is a table. Machine transcripts mishear terms: fix obvious ones silently ("кубер нейтс" -> Kubernetes, "Газул" -> Guzzle); use `[?]` only when the meaning itself is in doubt.
+6. Note `notes/<slug>-L03-<тема>.md`, frontmatter `ingest: fast`. It is a skeleton for revision that I read instead of the slides and the recording, not a retelling: conclusions without the reasoning that led to them; a 90-minute class fits in 800 words of text, code blocks not counted. Write for skimming on a phone, structured over prose. A defined term is its own paragraph starting with the term in bold. A paragraph only for cause and effect (why a rule exists, how A leads to B), 1-3 short sentences; several facts about one thing (an API, a primitive) become a short parent line with bullets. Bullets: one fact each, about 100 characters, never several facts joined by `;`; a point with parts is a short parent bullet with nested ones. A comparison of two or three things is a table. Machine transcripts mishear terms: fix obvious ones silently ("кубер нейтс" -> Kubernetes, "Газул" -> Guzzle); use `[?]` only when the meaning itself is in doubt.
    - keep, most important first: definitions and distinctions between close terms, in the teacher's words; the teacher's own positions, especially where they go against common practice; practical rules for real work (e.g. "migrations run as a Job before the new version starts"); an example or number only when the idea rests on it, in a few words ("changes cause 70%+ of failures")
    - a list from a slide or a standard source (e.g. the 12 factors) becomes one line per item; an item under "Уже знаю" gets just its name; from the talk add only what the slide lacks
    - chat Q&A: only an answer that adds a definition or a rule
    - items under "Уже знаю" in the course file and general basics: drop; a bare term in one line if the rest builds on it
-   - one citation per section, pointing where the section starts
-   - plain Russian: no "является", "осуществляется", "обеспечивает", "в рамках"
+   - citations: one per section, where it starts; with timestamped recording links, also one per definition and per paragraph that draws on another moment of the class, never per bullet
+   - plain Russian in full sentences with subject and verb: shorten by dropping content, never words (not "..., поэтому не везде", "только перезапуск"); no "является", "осуществляется", "обеспечивает", "в рамках"
    - teacher's stories: drop; a story with a real-world lesson becomes that lesson in one line; hints on what matters or will be on the exam go to "Акценты преподавателя" in the course file
-   - demos, live coding and exercises: what was done and the key commands, API or short code fragment that shows the idea; no step-by-step retelling, no task solutions
+   - demos, live coding and exercises: what was done and the key commands, API or code; prefer a code block plus one line over a paragraph that describes code; reconstruct code the teacher read aloud, noting once per note that code is reconstructed; no step-by-step retelling, no task solutions
    - proofs and derivations: a one-line idea
    - homework: the concepts and methods the tasks use, not task solutions
    - sections follow the meaning blocks of the class, not slide boundaries or the order of talk
@@ -27,7 +27,7 @@ Work without asking me anything: record doubts as `[?]` in the note and in the f
    - an existing note: merge into its sections instead of appending a duplicate; never touch `## Мой пересказ`
    - before saving, reread the note as me revising for the exam and cut every line I wouldn't miss
 7. Add the class's topics to mastery: 2-5 per class, each narrow enough for one quiz question set, level 0, checked `-`.
-8. Final report in chat: one line per class (file, number of `[?]`), then guesses you made about subject, number or date.
+8. Final report in chat: one line per class (file, number of `[?]`, word count if over 800 and why), then guesses you made about subject, number or date.
 
 ## Course file template
 
