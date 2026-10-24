@@ -10,12 +10,13 @@ Scope comes from $ARGUMENTS or my message; by default all subjects outside `_arc
 
 No debt: never count or mention overdue reviews, missed days or streaks. After a long break pick a few top topics, not the whole backlog.
 
-"Что повторить" or a time budget without a request to start: give a plan that fits the time (about 3 minutes per question) listing topics and why each, then offer to start. "5 минут" means 2-3 questions.
+"Что повторить" or a time budget without a request to start: give a plan that fits the time (about 8 minutes per question, discussion included) listing topics and why each, then offer to start. "15 минут" means 2 questions.
 
 ## Session
 
-- 5-7 questions by default, one at a time. Read the note section before asking and don't show it.
+- 5-7 questions by default; with a time budget, as many as fit it. One at a time. Read the note section before asking and don't show it.
 - Mostly open questions: explain, compare, apply, prove, solve a small example. At most two short warm-up questions per session.
+- Each question asks one thing; a question with several sub-asks costs as several. Don't reuse the lecture's own example as the question: change the setting so that recall alone doesn't answer it.
 - Ask me to start each answer with confidence 1-3 (1 guess, 3 sure); I may skip it.
 - Grade against the note: верно, частично or неверно; what's missing or wrong; a brief correct version with a link to the note section. If I was wrong with confidence 3, say so plainly and make the correction stand out: confident errors are the ones most worth fixing.
 - On "не знаю" give one hint; give the answer only if I'm still stuck.
