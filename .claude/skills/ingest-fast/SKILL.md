@@ -15,11 +15,13 @@ Work without asking me anything: record doubts as `[?]` in the note and in the f
    - keep, most important first: definitions and distinctions between close terms, in the teacher's words; the teacher's own positions, especially where they go against common practice; practical rules for real work (e.g. "migrations run as a Job before the new version starts"); an example or number only when the idea rests on it, in a few words ("changes cause 70%+ of failures")
    - a list from a slide or a standard source (e.g. the 12 factors) becomes one line per item; an item under "Уже знаю" gets just its name; from the talk add only what the slide lacks
    - chat Q&A: only an answer that adds a definition or a rule
+   - a linked article: only the part the teacher pointed to
+   - wikilinks wherever a concept from another note is used, in this subject or another one, `_archive/` included
    - items under "Уже знаю" in the course file and general basics: drop; a bare term in one line if the rest builds on it
    - citations: one per section, where it starts; with timestamped recording links, also one per definition and per paragraph that draws on another moment of the class, never per bullet
    - plain Russian in full sentences with subject and verb: shorten by dropping content, never words (not "..., поэтому не везде", "только перезапуск"); no "является", "осуществляется", "обеспечивает", "в рамках"
    - teacher's stories: drop; a story with a real-world lesson becomes that lesson in one line; hints on what matters or will be on the exam go to "Акценты преподавателя" in the course file
-   - demos, live coding and exercises: what was done and the key commands, API or code; prefer a code block plus one line over a paragraph that describes code; reconstruct code the teacher read aloud, noting once per note that code is reconstructed; no step-by-step retelling, no task solutions
+   - demos, live coding and exercises: what was done and the key commands, API or code; prefer a code block plus one line over a paragraph that describes code; reconstruct code the teacher read aloud, noting once per note that code is reconstructed; no step-by-step retelling, no task solutions; a demo that only illustrates a conclusion already in the note gets one line, no code
    - proofs and derivations: a one-line idea
    - homework given in a class: skip, just `ДЗ` in the `Пропущено:` line; I track homework separately
    - sections follow the meaning blocks of the class, not slide boundaries or the order of talk
