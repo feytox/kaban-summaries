@@ -6,148 +6,108 @@ links:
 ---
 # P02. Основы Kubernetes
 
-## Путь к Kubernetes
+## Зачем нужен Kubernetes
 
-Каждый этап решал проблему предыдущего: ([05:19](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=319))
+Инфраструктура прошла путь от физических серверов через виртуальные машины к контейнерам. Контейнеры лёгкие, но когда их сотни на многих серверах, вручную ими не управлять, и нужен оркестратор. ([05:19](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=319))
 
-| Этап               | Суть                                 | Минус                                    |
-| ------------------ | ------------------------------------ | ---------------------------------------- |
-| Физические серверы | один сервер = одно приложение        | железо простаивает, нет изоляции         |
-| Виртуальные машины | гипервизор запускает несколько ОС    | каждая гостевая ОС ест ресурсы           |
-| Контейнеры         | общее ядро хоста, изоляция процессов | сотнями контейнеров не управлять вручную |
+**Контейнер** - обычный процесс на хосте, изолированный через cgroups и namespaces. Это не виртуальная машина: ядро у всех контейнеров общее с хостом. ([11:03](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=663))
 
-**Контейнер** - обычный процесс на хосте, ограниченный cgroups и namespaces, а не виртуальная машина. Поэтому контейнер с другим ядром (Windows) на Linux-хосте не запустить. ([11:03](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=663))
-
-Оркестратор нужен, когда контейнеров сотни на многих серверах: он балансирует трафик, поднимает упавшее, обновляет без даунтайма, даёт общую сеть и хранилище. ([14:54](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=894))
-
-Почему победил Kubernetes: ([18:17](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=1097))
-- вырос из внутренних систем Google (Borg, Omega) и вышел уже проверенным на огромной нагрузке
-- расширяем на каждом уровне (CRD, операторы, CNI, CSI), вокруг большая экосистема
-- декларативность: описываешь желаемое состояние, Kubernetes приводит к нему систему и следит, чтобы оно сохранялось
+Оркестратор балансирует трафик, перезапускает упавшее, обновляет без простоя, связывает контейнеры сетью и даёт им хранилище. Kubernetes стал стандартом, потому что вырос из внутренних систем Google, легко расширяется и работает декларативно: вы описываете желаемое состояние, а он приводит к нему кластер и поддерживает его. ([18:17](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=1097))
 
 ## Архитектура кластера
 
-**Control plane** управляет кластером, **data plane** - ноды с нагрузкой. Роли лучше держать на разных нодах. ([21:40](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=1300))
+Компоненты делятся на **control plane**, который управляет кластером, и **data plane** - ноды, где работают приложения. ([21:40](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=1300))
 
-| Компонент                | Где     | Что делает                                                             |
-| ------------------------ | ------- | ---------------------------------------------------------------------- |
-| etcd                     | control | key-value хранилище, единственное место состояния кластера             |
-| API server               | control | REST API, единственный вход в кластер и единственный, кто пишет в etcd |
-| Controller manager       | control | контроллеры приводят кластер к манифестам                              |
-| Scheduler                | control | выбирает ноду для нового пода                                          |
-| cloud-controller-manager | control | только в облаке: создаёт ноды, балансировщики, диски                   |
-| kubelet                  | data    | агент на каждой ноде, запускает контейнеры через CRI                   |
-| kube-proxy               | data    | сетевые правила (iptables, IPVS) на каждой ноде, реализует Service     |
+Control plane:
+- **etcd** - key-value хранилище, единственное место, где лежит состояние кластера. Остальные компоненты состояния не хранят, поэтому их можно перезапускать и масштабировать.
+- **API server** - единственный вход в кластер. Через него ходят kubectl и все компоненты, и только он пишет в etcd. ([24:13](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=1453))
+- **Controller manager** запускает контроллеры. Каждый контроллер постоянно сверяет реальное состояние своих объектов с манифестом и исправляет расхождения, а не только в момент `apply`. ([26:09](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=1569))
+- **Scheduler** выбирает ноду для нового пода, но сам его не запускает. Он отбрасывает ноды, где не хватает ресурсов, из остальных берёт лучшую с учётом affinity и приоритета и записывает её в под. ([27:31](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=1651))
+- **cloud-controller-manager** есть только в облачных кластерах. Через API облака он создаёт ноды, балансировщики и диски.
 
-- остальные компоненты stateless, поэтому их можно перезапускать и масштабировать ([23:25](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=1405))
-- контроллер - **control loop**: сверяет реальное состояние с желаемым постоянно, а не только при `apply` ([26:09](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=1569))
-- Scheduler сам ничего не запускает: отсеивает ноды без нужных ресурсов, из оставшихся берёт лучшую, учитывает affinity и приоритет, пишет `nodeName` в под ([27:31](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=1651))
-- kubelet - единственный компонент, который работает не в контейнере, а системным процессом ([29:55](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=1795))
-- kube-proxy можно заменить CNI-плагином вроде Cilium или Calico ([32:00](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=1920))
+Data plane, на каждой ноде:
+- **kubelet** запускает контейнеры назначенных ноде подов и следит за ними. Это единственный компонент, который работает не в контейнере, а обычным системным процессом. ([29:55](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=1795))
+- **kube-proxy** настраивает сетевые правила, через которые работает Service. Его можно заменить CNI-плагином вроде Cilium.
 
-Запуск пода: kubectl -> API server пишет объект в etcd -> контроллер создаёт под -> Scheduler назначает ноду -> kubelet этой ноды запускает контейнеры и сообщает статус. Все шаги идут через API server. ([01:29:01](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=5341))
+Запуск пода проходит так: kubectl отправляет манифест в API server, контроллер создаёт под, Scheduler назначает ему ноду, kubelet этой ноды запускает контейнеры. Все шаги идут через API server и etcd. ([01:29:01](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=5341))
 
 ## Pod
 
-**Pod** - минимальная единица развёртывания: один или несколько тесно связанных контейнеров с общим IP и портами, друг к другу они ходят через `localhost`. ([36:03](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=2163))
+**Pod** - минимальная единица развёртывания: один или несколько тесно связанных контейнеров. У них общий IP и порты, поэтому друг к другу они обращаются через `localhost`. ([36:03](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=2163))
 
-**Sidecar** - контейнер рядом с основным, который дополняет его, не вмешиваясь в работу: сборщик логов, прокси, агент мониторинга. ([38:20](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=2300))
+Кроме основного контейнера, в поде бывают служебные:
+- **Sidecar** работает рядом с основным контейнером и дополняет его, не вмешиваясь в работу: собирает логи, проксирует трафик, отдаёт метрики. ([38:20](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=2300))
+- **Init-контейнер** выполняется до основных и завершается: готовит директории, проверяет БД. Init-контейнеры идут по очереди, и если один упал, основной контейнер не запустится.
 
-**Init-контейнер** - готовит окружение до старта основных и завершается. Init-контейнеры идут по очереди, по разу; если какой-то упал, основной контейнер не стартует. ([38:55](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=2335))
-
-Под одноразовый: если упала нода, сам под не пересоздастся. Это делают контроллеры, поэтому поды вручную не создают. ([40:59](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=2459))
+Под одноразовый: если его нода упала, сам он не пересоздастся. Пересоздают поды контроллеры, поэтому вручную поды не создают. ([40:59](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=2459))
 
 ## Контроллеры нагрузки
 
-**ReplicaSet** - держит заданное число подов и поднимает новый вместо упавшего или удалённого. ([41:31](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=2491))
-- поды выбирает по label selector, поэтому labels шаблона должны совпадать с селектором
-- новый образ получат только новые поды: старые продолжат работать со старым ([44:24](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=2664))
+Для постоянно работающих приложений:
+- **ReplicaSet** держит заданное число подов и поднимает новый вместо упавшего. Свои поды он находит по labels, поэтому labels в шаблоне должны совпадать с селектором. Новый образ получат только новые поды, а старые так и будут работать со старым. ([41:31](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=2491))
+- **Deployment** управляет ReplicaSet'ами и добавляет обновление без простоя и откат. Чтобы обновить приложение, меняют тег образа и применяют манифест. Стратегия `RollingUpdate` заменяет поды постепенно, `Recreate` - все сразу. Для приложений почти всегда берут его. ([45:25](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=2725))
+- **StatefulSet** нужен приложениям с состоянием, например БД. У каждого пода постоянный номер (`mysql-0`), своё DNS-имя и свой том. Поды создаются по порядку номеров, а удаляются в обратном. ([48:11](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=2891))
+- **DaemonSet** запускает по поду на каждой ноде, включая новые. Им запускают служебных агентов: node-exporter, сборщики логов, сетевые плагины. ([50:25](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=3025))
 
-**Deployment** - контроллер над ReplicaSet, который добавляет обновления без даунтайма и откат; основная абстракция для приложений. Обновление = поменять тег образа и применить манифест. ([45:25](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=2725))
-- стратегии `Recreate` и `RollingUpdate`
-- `maxSurge: 1`, `maxUnavailable: 1` - меняем поды по одному
+Для разовых задач:
+- **Job** запускает поды, пока задача не завершится успешно или не кончатся попытки (`backoffLimit`). Лимит не даёт сломанной задаче перезапускаться бесконечно. Так запускают миграции БД и отчёты. ([53:49](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=3229))
+- **CronJob** создаёт Job по расписанию в синтаксисе crontab.
 
-**StatefulSet** - группа подов для приложений с состоянием: у каждого пода постоянный номер (`mysql-0`), DNS-имя и свой том. Поды создаются по порядку номеров и удаляются в обратном. ([48:11](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=2891))
+## Конфигурация
 
-**DaemonSet** - по поду на каждой ноде, в том числе на новых. ([50:25](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=3025))
+**Namespace** - логическая группа ресурсов внутри кластера, например под одно окружение. Объект без namespace попадает в `default`. ([56:47](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=3407))
 
-| Контроллер  | Для чего                | Пример                            |
-| ----------- | ----------------------- | --------------------------------- |
-| Deployment  | stateless-приложения    | веб-приложение                    |
-| StatefulSet | приложения с состоянием | БД                                |
-| DaemonSet   | служебные агенты        | node-exporter, сборщик логов, CNI |
+**ConfigMap** хранит конфигурацию в виде пар ключ-значение отдельно от кода, чтобы один образ работал во всех окружениях. Передать её в под можно двумя способами: ([58:01](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=3481))
+- **Файлом через volume.** Файл обновляется без перезапуска пода, но приложение должно само заметить изменение и перечитать его.
+- **Переменными окружения** через `envFrom.configMapRef`. Если такого ConfigMap нет, под не запустится.
 
-**Job** - запускает поды разовой задачи, пока она не завершится успешно или не кончатся попытки `backoffLimit`. Лимит не даёт сломанной задаче перезапускаться бесконечно. Примеры: миграции БД, отчёты. ([53:49](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=3229))
-
-**CronJob** - создаёт Job по расписанию в синтаксисе crontab. ([55:40](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=3340))
-
-## Namespace, ConfigMap, Secret
-
-**Namespace** - логическое разделение ресурсов кластера, например по окружениям; без указания объект попадает в `default`. ([56:47](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=3407))
-
-**ConfigMap** - конфигурация в виде ключ-значение отдельно от кода, чтобы один образ работал во всех окружениях. ([58:01](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=3481))
-- файлом через volume: обновляется без перезапуска пода, но приложение должно само перечитать файл (можно поручить sidecar'у)
-- переменными окружения через `envFrom.configMapRef`
-- если ConfigMap нет, под не запустится
-
-**Secret** - для паролей и токенов приложения, доступа к закрытому registry, TLS-сертификатов. ([01:03:25](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=3805))
-
-Secret не шифрует, а кодирует в Base64: кто может прочитать объект, видит значение. Защита: шифрование в etcd (только хранилище), доступ через RBAC, внешние Sealed Secrets или Vault. ([01:05:16](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=3916))
+**Secret** хранит пароли и токены приложения, доступ к закрытому registry и TLS-сертификаты. Данные в нём не шифруются, а только кодируются в Base64: кто может прочитать объект, видит значение. Защищают секреты шифрованием в etcd, ограничением доступа через RBAC или внешними инструментами вроде Vault. ([01:03:25](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=3805))
 
 ## Хранение данных
 
-| Том          | Где данные                     | Живёт              |
-| ------------ | ------------------------------ | ------------------ |
-| emptyDir     | на ноде, изначально пусто      | пока жив под       |
-| hostPath     | директория на ноде             | пока жива нода     |
-| PV через PVC | хранилище кластера (NFS, диск) | независимо от пода |
+Тома различаются тем, сколько живут данные: ([01:07:14](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=4034))
 
-([01:07:14](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=4034))
-- emptyDir - для кэша и промежуточных файлов
-- с hostPath данные теряются, когда под переезжает на другую ноду
+| Том          | Где данные                       | Сколько живут                                  |
+| ------------ | -------------------------------- | ---------------------------------------------- |
+| emptyDir     | на ноде, сначала пусто           | пока жив под                                   |
+| hostPath     | в директории на ноде             | пока жива нода; под на другой ноде их не видит |
+| PV через PVC | в хранилище кластера (диск, NFS) | независимо от пода                             |
 
-**PersistentVolume (PV)** - конкретное хранилище кластера. **PersistentVolumeClaim (PVC)** - заявка пода на хранилище нужного типа (**StorageClass**) и объёма. Когда PVC привязан к PV, тот получает статус `Bound`, а под монтирует PVC. ([01:10:10](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=4210))
+**PersistentVolume (PV)** - конкретное хранилище в кластере. **PersistentVolumeClaim (PVC)** - заявка пода на хранилище нужного класса и объёма. Когда заявку привязывают к PV, под может смонтировать её как том. ([01:10:10](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=4210))
 
 ## Сеть
 
-**Service** - стабильный IP и DNS-имя `<service>.<namespace>.svc.cluster.local` для группы подов с балансировкой между ними. Нужен, потому что IP пода меняется при перезапуске. Поды выбирает по label selector; `port` - порт Service, `targetPort` - порт в поде. ([01:14:19](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=4459))
+**Service** даёт группе подов постоянный IP и DNS-имя `<service>.<namespace>.svc.cluster.local` и балансирует трафик между ними. Он нужен, потому что IP пода меняется при каждом перезапуске. Поды Service находит по labels, а `targetPort` указывает порт в поде. ([01:14:19](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=4459))
 
-| Тип            | Доступен                   | Когда                        |
-| -------------- | -------------------------- | ---------------------------- |
-| `ClusterIP`    | только внутри кластера     | по умолчанию, связь сервисов |
-| `NodePort`     | снаружи через порт на ноде | доступ в minikube            |
-| `LoadBalancer` | через балансировщик облака | managed-кластер в облаке     |
+Тип Service определяет, откуда он доступен: ([01:15:41](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=4541))
+- **ClusterIP** - только внутри кластера. Это тип по умолчанию, через него сервисы ходят друг к другу.
+- **NodePort** - ещё и снаружи, через порт на ноде. Так обычно открывают доступ к приложению в minikube.
+	- По семинаристу, порт открывается на ноде, где запущена нагрузка.
+	- По документации, NodePort построен поверх ClusterIP и открывает один и тот же порт (по умолчанию из 30000-32767) на каждой ноде ([документация](https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport)) (вне конспекта).
+- **LoadBalancer** - через внешний балансировщик облака. Он платный, и одна строка в манифесте может заметно увеличить счёт.
 
-([01:15:41](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=4541))
-- по семинаристу, NodePort открывает порт на ноде, где запущена нагрузка, и пробрасывает его в под
-- по документации, NodePort - надстройка над ClusterIP: создаётся cluster IP, и один и тот же порт (по умолчанию 30000-32767) открывается на каждой ноде ([документация](https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport)) (вне конспекта)
-- `LoadBalancer` в облаке платный: одна строка в манифесте раздувает счёт
-- `ExternalName` на слайде стоит рядом с `LoadBalancer`; по документации он ничего не балансирует, а отдаёт CNAME на внешнее имя (вне конспекта)
+**Headless Service** - Service без собственного IP: DNS возвращает адреса всех подов, и у каждого пода есть своё имя. Его используют, когда нужно обратиться к конкретному поду, обычно вместе со StatefulSet. ([01:20:08](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=4808))
 
-**Headless Service** - Service без своего IP: DNS отдаёт адреса всех подов, у каждого пода своё имя. Нужен для обращения к конкретному поду, обычно со StatefulSet. ([01:20:08](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=4808))
-
-**Gateway API** - CRD для входа внешнего трафика в кластер, замена устаревшему Ingress. Service балансирует внутри кластера, Gateway принимает трафик снаружи (и может терминировать TLS); он дополняет Service, а не заменяет. ([01:21:42](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=4902))
-- цепочка: `Gateway` (точка входа: класс балансировщика, порт) -> `HTTPRoute` (правила по пути, заголовкам) -> Service -> поды
-- `allowedRoutes.namespaces.from: Same` не пускает к Gateway маршруты других команд из чужих namespace
+**Gateway API** - набор ресурсов для входа внешнего трафика в кластер, замена устаревшему Ingress. Service балансирует трафик внутри кластера, а Gateway принимает его снаружи, поэтому они дополняют друг друга. Трафик идёт по цепочке `Gateway` -> `HTTPRoute` -> Service -> поды, где `HTTPRoute` задаёт правила маршрутизации по пути и заголовкам. ([01:21:42](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=4902))
 
 ## kubectl
 
-**kubectl create** императивно создаёт объект и падает, если он уже есть. **kubectl apply** декларативно приводит кластер к файлу, поэтому его можно запускать сколько угодно раз. ([01:32:12](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=5532))
+`kubectl create` создаёт объект и падает с ошибкой, если он уже есть. `kubectl apply` приводит кластер к состоянию из файла, поэтому его можно запускать сколько угодно раз. ([01:32:12](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=5532))
 
 ```bash
 kubectl apply -f k8s/
-kubectl get all -n <ns>; kubectl describe pod <pod>
+kubectl get all -n <ns>
+kubectl describe pod <pod>
 kubectl exec -it <pod> -- sh
-kubectl logs <pod> -c <container>    # -c, если в поде есть sidecar
+kubectl logs <pod> -c <container>    # -c нужен, если в поде есть sidecar
 kubectl scale deployment <name> --replicas 3
 kubectl port-forward svc/<name> 8888:8080
 ```
 
-- `exec` в проде часто запрещает безопасность: это неконтролируемый доступ внутрь сервиса ([01:35:07](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=5707))
-- `logs` видит только то, что приложение пишет в stdout
+`kubectl logs` показывает только то, что приложение пишет в stdout. `exec` удобен для отладки, но в проде его часто запрещают, потому что он даёт неконтролируемый доступ внутрь сервиса. ([01:35:07](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=5707))
 
-В демо приложение собирают и загружают в minikube через `minikube image load <образ>`, иначе образа там нет. Свой MySQL в Deployment семинарист сам назвал ошибкой: правильнее StatefulSet. ([01:39:06](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=5946))
+Локально собранный образ нужно загрузить в minikube командой `minikube image load <образ>`, иначе кластер его не найдёт. ([01:41:28](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=6088))
 
-По куратору, в Kubernetes обычно запускают stateless-сервисы, а то, что хранит данные (СУБД, объектное хранилище), живёт вне его. Основные команды kubectl нужно знать обязательно. ([01:47:01](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=6421))
+По куратору, в Kubernetes обычно запускают stateless-сервисы, а то, что хранит данные (СУБД, объектное хранилище), чаще живёт вне его. Основные команды kubectl после курса нужно знать обязательно. ([01:47:01](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=6421))
 
-Пропущено: снапшоты и миграция VM, подробности etcd и cloud-controller-manager, именование подов Deployment, манифесты со слайдов, архив примеров манифестов, демо OnCall по шагам, вопрос про разделение фронта и бэка, ДЗ.
+Пропущено: этапы эволюции инфраструктуры подробно, детали etcd и cloud-controller-manager, ExternalName, параметры RollingUpdate, манифесты со слайдов, архив примеров манифестов, демо OnCall, вопрос про разделение фронта и бэка, ДЗ.
