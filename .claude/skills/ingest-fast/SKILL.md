@@ -20,7 +20,7 @@ Work without asking me anything: record doubts as `[?]` in the note and in the f
 
    What to keep and how to write it:
    - keep, most important first: definitions and distinctions between close terms, in the teacher's words; the teacher's own positions, especially where they go against common practice; practical rules for real work (e.g. "migrations run as a Job before the new version starts"); an example or number only when the idea rests on it, in a few words ("changes cause 70%+ of failures")
-   - a list from a slide or a standard source (e.g. the 12 factors) becomes one line per item; an item under "Уже знаю" gets just its name; from the talk add only what the slide lacks
+   - a list from a slide or a standard source (e.g. the 12 factors) keeps every item, as table rows or bullets; an item under "Уже знаю" gets just its name; from the talk add only what the slide lacks
    - chat Q&A: only an answer that adds a definition or a rule
    - a linked article: only the part the teacher pointed to
    - wikilinks wherever a concept from another note is used, in this subject or another one, `_archive/` included
