@@ -10,34 +10,35 @@ links:
 
 ## Гонка
 
-Язык не ограничивает доступ потоков к общей памяти, синхронизировать их должен разработчик. ([04:13](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=253))
+**Состояние гонки** (race condition) - результат зависит от порядка, в котором потоки попадают в критическую секцию. ([04:13](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=253))
 
-**Состояние гонки** (race condition) - ситуация, когда результат зависит от порядка потоков и от того, кто первым войдёт в критическую секцию.
-
-Демо: у Васи 100 руб., два потока одновременно переводят по 100 Пете и Саше. ([05:13](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=313))
+Память между потоками никто не ограничивает, поэтому доступ к данным синхронизирует сам разработчик.
 
 ```csharp
 static void SendMoney(Account from, Account to, int value)
 {
-    if (from.Rubles < value) return;   // оба потока проходят проверку
-    Thread.Sleep(10);                  // лектор так подгоняет гонку
-    from.Rubles -= value;
+    if (from.Rubles < value) return;   // проверка
+    Thread.Sleep(...);                 // лектор "портит" код, чтобы гонка случалась чаще
+    from.Rubles -= value;              // действие отдельно от проверки
     to.Rubles += value;
 }
-// итог: Вася -100, Петя 100, Саша 100
+// Вася (100 руб.) -> Петя и Вася -> Саша по 100 в двух потоках: оба прошли проверку, у Васи -100
 ```
 
-Проверка и действие идут отдельно, поэтому между ними вклинивается другой поток. `+=` тоже гонка: это три операции, чтение, сложение и запись.
+([05:13](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=313))
 
-**Критическая секция** - участок кода, который в один момент выполняет только один поток. Лектор использует как синонимы "эксклюзивная блокировка" и "лок". ([11:50](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=710))
+- Гонка возникает, когда проверка (чтение) и действие (запись) идут отдельными шагами.
+- `+=` - тоже три операции: чтение, изменение, запись. Поэтому лок нужен и на получателя. ([25:21](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=1521))
+	- 100 потоков по `+1` к общей переменной почти никогда не дают 100
+	- атомарная замена - `Interlocked.Add` ([[mtap-L03-дедлоки-и-cas#Неблокирующая синхронизация|L03]])
 
 ## lock и Monitor
 
-`lock` закрывает 99% случаев. Он защищает данные, только если все потоки, которые их трогают, заходят через него: дверь не поможет, если рядом дыра в стене. ([10:09](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=609))
+**Критическая секция** (эксклюзивная блокировка) - участок кода, который в каждый момент выполняет только один поток. ([11:50](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=710))
 
 ```csharp
-lock (from)        // лектор блокируется на самих объектах счетов
-lock (to)
+lock (from)
+lock (to)          // порядок вложенных локов - в L03
 {
     if (from.Rubles < value) return;
     from.Rubles -= value;
@@ -45,31 +46,10 @@ lock (to)
 }
 ```
 
-Объект блокировки: ([46:23](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=2783))
-- только ссылочный тип: value type (например, кортеж) каждый раз новый, и блокировка ничего не защищает
-- общий для потоков: поле класса, а не локальная переменная
-- приватное поле: публичное могут перезаписать, и потоки разойдутся по разным объектам
-- не строка
-	- изменение строки создаёт новый объект
-	- литералы интернируются, и несвязанные блокировки на одинаковых литералах становятся одной
-- обычно это `private static readonly object` или поле типа `Lock`
-
-```csharp
-private string key = "a:b";
-lock (key) { key = key.Replace(':', ';'); }   // следующий поток заблокируется уже на другой строке
-
-private static string a = "123";              // в одном классе
-private static string b = "123";              // в другом классе
-lock (a) { ... }
-lock (b) { ... }                              // это та же блокировка, что и lock (a)
-```
-
-В C# 13 появился отдельный тип `Lock`. Лектор не нашёл причин предпочесть его обычному `lock (obj)`. ([16:26](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=986))
-
-```csharp
-private readonly Lock locker = new();
-using (locker.EnterScope()) { ... }
-```
+- `lock` - основной примитив, он нужен в 99% случаев. ([10:09](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=609))
+- В `lock` можно передать любой ссылочный тип; пустой `lock` не скомпилируется.
+- Что блокирует `lock`, код или объект? Формально критическая секция - это код, а объект служит её именем. Лектор считает верными оба объяснения. ([19:36](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=1176))
+- Лок привязан к объекту, а не к переменной: переприсвоили переменную - потоки встали в разные очереди.
 
 `lock` - синтаксический сахар над `Monitor`: ([30:41](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=1841))
 
@@ -77,89 +57,102 @@ using (locker.EnterScope()) { ... }
 bool lockTaken = false;
 try
 {
-    Monitor.Enter(from, ref lockTaken);   // занято - поток встаёт в очередь и ждёт
+    Monitor.Enter(locker, ref lockTaken);   // занято -> поток встаёт в очередь объекта и ждёт
     SendMoney(from, to, value);
 }
 finally
 {
-    if (lockTaken) Monitor.Exit(from);
+    if (lockTaken) Monitor.Exit(locker);    // отпускаем даже при исключении
 }
 ```
 
-- `finally` отпускает блокировку, даже если внутри вылетело исключение.
-- Флаг `lockTaken` защищал от `ThreadAbortException` из старого `Thread.Abort`.
-- `Monitor.TryEnter` не ждёт, а сразу возвращает `bool`; нужен редко. ([34:42](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=2082))
-- Через `Monitor` можно захватить несколько объектов, вызывая `Enter` в цикле.
+- `finally`: без него исключение внутри оставит лок захваченным, и всё зависнет.
+- `lockTaken` нужен из-за `Thread.Abort`: тот выбрасывал `ThreadAbortException` в любой точке потока, даже до входа в монитор. ([32:40](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=1960))
+- `Monitor.TryEnter` в очередь не встаёт: возвращает `bool`, и поток идёт дальше. Лектор не придумал, где он нужен.
+- `Monitor.Enter` в цикле по нескольким объектам захватывает сразу несколько локов; `lock` - частный случай для одного объекта. ([58:12](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=3492))
 
-## Mutex, Semaphore, ReaderWriterLock
-
-| Примитив         | Мест | Между процессами       | Реентерабельный |
-| ---------------- | ---- | ---------------------- | --------------- |
-| `lock`/`Monitor` | 1    | нет                    | да              |
-| `Mutex`          | 1    | да, объект ОС по имени | да              |
-| `Semaphore`      | N    | да                     | нет             |
-| `SemaphoreSlim`  | N    | нет, зато быстрее      | нет             |
-
-([37:21](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=2241))
-
-**Реентерабельность** - поток, который уже держит блокировку, может взять её ещё раз. ([01:16:25](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=4585))
-
-### Mutex
+Новый тип `Lock` из C# работает так же, с мелкими отличиями под капотом. Лектор не видит причин его использовать и пишет обычный `lock`; нейросеть тоже выдаст обычный. ([16:26](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=986))
 
 ```csharp
-using var mutex = new Mutex(initiallyOwned: false, name: "my-app-disk");
-if (!mutex.WaitOne(TimeSpan.FromSeconds(1))) return;   // за секунду не дождались
-try { /* критическая секция */ }
-finally { mutex.ReleaseMutex(); }
+private static readonly Lock locker = new();
+using (locker.EnterScope()) { ... }
 ```
 
-- Мьютекс живёт в ОС, по имени его находят другие процессы, даже на других языках.
-- `try/finally` и освобождение пишешь сам, `lock` за тебя этого не сделает.
-- `initiallyOwned: true` создаёт мьютекс сразу захваченным.
-- Число мьютексов в ОС ограничено.
-- Отпустить чужой мьютекс нельзя: `ReleaseMutex` из потока-невладельца бросает `ApplicationException` (вне конспекта, [docs](https://learn.microsoft.com/en-us/dotnet/api/system.threading.mutex.releasemutex)).
-- Если поток завершился, не отпустив мьютекс, следующий захвативший получит `AbandonedMutexException` (вне конспекта, там же).
-
-Пример лектора: приложение на голом железе пишет на диск, а при деплое старая и новая версии какое-то время работают рядом. Именованный `Mutex` не даёт двум экземплярам одновременно работать с диском. ([41:51](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=2511))
-
-### Semaphore
-
-```csharp
-var semaphore = new SemaphoreSlim(initialCount: 2, maxCount: 10);
-semaphore.Wait();                   // свободных мест 2 -> 1; при 0 поток ждёт
-try { ... }
-finally { semaphore.Release(); }    // +1 место, но не больше maxCount
-```
-
-([01:04:35](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=3875))
-
-- `initialCount` - сколько мест свободно сейчас.
-- `maxCount` - до скольких мест можно дорелизить семафор.
-- Применение - ограничить параллелизм, например не больше 10 потоков одновременно.
-- Для эксклюзивного доступа семафор не подходит: он пускает несколько потоков.
-
-### ReaderWriterLockSlim
-
-```csharp
-var rw = new ReaderWriterLockSlim();
-
-rw.EnterReadLock();
-try { Read(); } finally { rw.ExitReadLock(); }
-
-rw.EnterWriteLock();
-try { Write(); } finally { rw.ExitWriteLock(); }
-```
-
-([01:01:07](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=3667))
-
-- Читатели проходят одновременно, писатель работает один.
-- Когда приходит писатель, новые читатели ждут, а он ждёт, пока уйдут текущие.
-- Читательский лок нужен, чтобы читатель не увидел промежуточное состояние, которое оставил писатель.
-- Писать под read-локом язык не запретит: не будет ни ошибки компиляции, ни исключения.
+`ConcurrentDictionary` берёт лок не на ключ и не на бакет, а на группу бакетов (**striped locking**); чтение идёт без локов. Подробно - в [[mtap-L04-коллекции-и-producer-consumer#ConcurrentDictionary|L04]]. ([21:01](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=1261))
 
 ## Правила
 
-- Синхронизация через `Sleep` и задержки не работает: на ноутбуке, CI-агенте и проде тайминги разные. Сломать код задержкой можно, а починить нельзя. ([59:20](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=3560))
-- Если у незавершённого потока `IsBackground = false`, программа не выйдет из `Main` и зависнет. При `true` рантайм сам убьёт поток, когда `Main` закончится. ([05:58](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=358))
+Объект блокировки: ([46:23](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=2783))
+- **приватное поле**, общее для всех потоков; лок на локальном объекте бессмыслен: метод не гоняется сам с собой
+- **не строка**: строки неизменяемы, любое изменение (`Replace`) с переприсваиванием даёт новый объект ([47:13](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=2833))
+- **не строковый литерал**: литералы интернируются, и два несвязанных лока на `"123"` в разных классах станут одним ([50:36](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=3036))
+- **не публичное поле**: его могут переприсвоить, и потоки будут ждать у разных "дверей" ([54:07](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=3247))
 
-Пропущено: подробности демо с переводами, `@lock` как имя переменной, устройство `ConcurrentDictionary` (будет позже), пример с масштабированием реплик через семафор.
+Лок работает, только если его берут все потоки, которые трогают эти данные. Поток без `lock` пройдёт мимо, как через дыру в стене рядом с закрытой дверью. ([17:45](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=1065))
+
+Синхронизация через `Sleep` не работает: испортить код задержкой можно, а починить нельзя. Локально, на билд-агенте и на проде тайминги разные. ([59:20](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=3560))
+
+`IsBackground = false`: `Main` при выходе ждёт такой поток, и незавершённый поток подвесит программу. Фоновые потоки рантайм убивает сам. ([05:58](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=358))
+
+## Mutex
+
+**Mutex** - эксклюзивная блокировка на уровне ОС с именем-строкой. Её видят все процессы, в том числе программы на других языках. ([37:21](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=2241))
+
+```csharp
+using var mutex = new Mutex(initiallyOwned: false, name: "my-app");
+if (!mutex.WaitOne(TimeSpan.FromSeconds(1)))   // за секунду не вошли -> false, уходим
+    return;
+try { ... }                                    // критическая секция
+finally { mutex.ReleaseMutex(); }              // try/finally пишем сами
+```
+
+- Таймаут в `WaitOne` ограничивает ожидание входа, а не время работы внутри. ([40:04](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=2404))
+- `initiallyOwned: true` - создавший поток сразу владеет мьютексом, и остальные ждут его `ReleaseMutex`.
+- Мьютексов в ОС ограниченное число, как и потоков, поэтому неотпущенный мьютекс опаснее неотпущенного `lock`.
+- Отпустить мьютекс может только поток, который его захватил. Лектор так предположил, не будучи уверен; по документации вызов из чужого потока бросает `ApplicationException` (вне конспекта, [docs](https://learn.microsoft.com/en-us/dotnet/api/system.threading.mutex.releasemutex)). ([45:18](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=2718))
+
+Пример лектора: приложение на голом железе пишет на диск. При обновлении новая версия стартует рядом со старой, и мьютекс не даёт двум экземплярам одновременно работать с данными. ([41:51](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=2511))
+
+## Semaphore и ReaderWriterLock
+
+**Семафор** - многоместная критическая секция: внутрь одновременно пускают до N потоков. Нужен, чтобы ограничить параллелизм, а не для эксклюзивного доступа. ([01:04:35](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=3875))
+
+```csharp
+var semaphore = new SemaphoreSlim(initialCount: 2, maxCount: 10);
+semaphore.Wait();       // свободных мест -1; при 0 поток ждёт
+try { ... }
+finally { semaphore.Release(); }   // +1, но не выше maxCount
+```
+
+- `initialCount` - сколько мест свободно сейчас, `maxCount` - до скольких мест можно дорастить `Release`. ([01:08:03](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=4083))
+- `(2, 10)` пустит только двоих; все 10 мест сразу даст `(10, 10)`.
+
+**ReaderWriterLock** - много читателей одновременно или один писатель. Писатель блокирует всех, читатели не мешают друг другу. ([01:01:49](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=3709))
+
+```csharp
+var rw = new ReaderWriterLockSlim();
+rw.EnterReadLock();  try { /* читаем */ } finally { rw.ExitReadLock(); }
+rw.EnterWriteLock(); try { /* пишем */ } finally { rw.ExitWriteLock(); }
+```
+
+- Read lock защищает от писателя посреди долгого чтения, например `foreach` по списку: иначе половина данных окажется старой, половина новой.
+- Писатель ждёт, пока выйдут текущие читатели; новых читателей не пускают. ([01:14:08](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=4448))
+- "Читатель" - только соглашение: запись под read lock не даст ошибки ни при компиляции, ни в рантайме. Нейросеть легко нарушит его, не видя, что код выполняется под read lock. ([01:17:59](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=4679))
+
+## Сравнение примитивов
+
+| Примитив               | Сколько потоков внутри         | Между процессами | Реентерабельный |
+| ---------------------- | ------------------------------ | ---------------- | --------------- |
+| `lock` / `Monitor`     | 1                              | нет              | да              |
+| `Mutex`                | 1                              | да               | да              |
+| `Semaphore`            | N                              | да               | нет             |
+| `SemaphoreSlim`        | N                              | нет              | нет             |
+| `ReaderWriterLockSlim` | много читателей или 1 писатель | нет              | -               |
+
+([01:15:39](https://kontur.ktalk.ru/recordings/mY563QzooY8BgJaaRej3?t=4539))
+
+- Slim-версии работают внутри процесса и быстрее обычных.
+- **Реентерабельность** - поток, уже держащий блокировку, может войти в неё ещё раз. Пример самоблокировки на семафоре - в [[mtap-L03-дедлоки-и-cas#Дедлок|L03]].
+- `ReaderWriterLockSlim`: реентерабельность и межпроцессность лектор не обсуждал.
+
+Пропущено: аналогия с больницей и дверью, именование переменных через `@lock`, пример масштабирования реплик через семафор, вопрос про порядок локов (разобран в L03), байка про Контур.Толк.
