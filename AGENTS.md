@@ -24,6 +24,7 @@ My university courses: you turn class materials into notes, quiz me and check my
   links: []             # recordings, online slides and other URLs for this class
   ```
 - Math in LaTeX: `$...$` inline, `$$...$$` display.
+- JSON code blocks are tagged `json` even with comments: Obsidian doesn't highlight `jsonc`.
 
 ## Content rules
 
