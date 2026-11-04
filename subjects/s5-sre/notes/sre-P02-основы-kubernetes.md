@@ -1,5 +1,5 @@
 ---
-date:
+date: 2026-09-25
 ingest: full
 links:
   - https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view
