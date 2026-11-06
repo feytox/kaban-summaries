@@ -6,7 +6,7 @@ University course notes shared by a group of students; the folder is opened as a
 
 - `_inbox/`: unsorted materials I drop for ingest.
 - `subjects/s<semester>-<slug>/`, e.g. `s5-algo` (slug is short, latin). Finished courses move to `subjects/_archive/`; skip them unless I ask or a link leads there.
-  - `<slug>-course.md`: exam date in frontmatter; teachers, schedule, grading, homework, course plan, teachers' emphases, course-wide links, ticket list. Structure: the template in `.claude/skills/ingest-fast/SKILL.md`.
+  - `<slug>-course.md`: exam date in frontmatter; teachers, schedule, grading, course plan, teachers' emphases, course-wide links, ticket list. Structure: the template in `.claude/skills/ingest-fast/SKILL.md`.
   - `raw/`: original materials, git-ignored. Never edit or delete them.
   - `notes/`: `<slug>-L03-<тема>.md` lecture, `<slug>-P03-<тема>.md` practice, `<slug>-HW2-<тема>.md` homework digest, `<slug>-<тема>.md` anything else. `<тема>` is a few Russian/English words joined by `-`.
   - `tickets/`: `<slug>-T07.md` exam ticket cards.
