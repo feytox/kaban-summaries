@@ -24,4 +24,4 @@ No debt: never count or mention overdue reviews, missed days or streaks. After a
 
 ## Finish
 
-Update mastery: each topic asked gets the level of its worst answer this session (3 верно, 2 частично, 1 неверно) and today's date. Log неверно and частично answers to mistakes, and close open mistakes I answered correctly now. End with one paragraph: what's solid and what to look at next.
+Formats: `.claude/progress-formats.md`. Update mastery: each topic asked gets the level of its worst answer this session (3 верно, 2 частично, 1 неверно) and today's date. Log неверно and частично answers to mistakes, and close open mistakes I answered correctly now. End with one paragraph: what's solid and what to look at next.

@@ -39,7 +39,7 @@ Work without asking me anything: record doubts as `[?]` in the note and in the f
      ```
    - an existing note: merge into its sections instead of appending a duplicate
    - after writing the note, revise it in place: count the words of its text without frontmatter, code blocks and citations with a quick script; while over 800, cut the lines I'd miss least when revising for the exam; then go line by line and fix every line that lacks a subject or verb it needs, uses an arrow or a lone bold word instead of a verb, or breaks case or agreement
-7. Add the class's topics to mastery: 2-5 per class, each narrow enough for one quiz question set, level 0, checked `-`.
+7. Add the class's topics to mastery (format: `.claude/progress-formats.md`): 2-5 per class, each narrow enough for one quiz question set, level 0, checked `-`.
 8. Final report in chat: one line per class (file, number of `[?]`, word count if over 800 and why), then guesses you made about subject, number or date.
 
 ## Course file template
