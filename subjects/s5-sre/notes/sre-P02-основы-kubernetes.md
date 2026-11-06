@@ -174,7 +174,7 @@ spec:
   type: NodePort         # по умолчанию ClusterIP
   selector: {app: web}   # трафик идёт на поды с этим label
   ports:
-    - port: 80           # порт Service
+    - port: 30080        # порт Service
       targetPort: 8080   # порт в поде
 # DNS: web.<namespace>.svc.cluster.local
 ```
