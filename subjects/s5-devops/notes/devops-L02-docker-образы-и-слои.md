@@ -100,4 +100,5 @@ CMD ["python", "app.py"]
 
 ([01:20:27](https://fiit.ktalk.ru/recordings/3tOKUcCu31PuH6ao2fmU?t=4827))
 
-Пропущено: hello-world, пример Flask-сервера, обсуждение FROM без базы, Yandex Container Registry и CLI `yc`, сканеры уязвимостей, ДЗ.
+> [!note]- Пропущено
+> hello-world, пример Flask-сервера, обсуждение FROM без базы, Yandex Container Registry и CLI `yc`, сканеры уязвимостей, ДЗ.

@@ -171,4 +171,5 @@ void Produce(int task)
 
 На следующей лекции: пул потоков.
 
-Пропущено: аналогия с TCP подробно, `Volatile.Write` в исходниках словаря, детали статьи (`concurrencyLevel`, удаление по паре ключ-значение, перезапись `Guid`), демо `ResetEvent`, `ManualResetEventSlim`.
+> [!note]- Пропущено
+> аналогия с TCP подробно, `Volatile.Write` в исходниках словаря, детали статьи (`concurrencyLevel`, удаление по паре ключ-значение, перезапись `Guid`), демо `ResetEvent`, `ManualResetEventSlim`.

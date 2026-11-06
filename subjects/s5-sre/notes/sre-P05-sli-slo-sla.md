@@ -151,4 +151,5 @@ count_over_time((SLI1 < 1)[1h:] & (SLI2 < 0.2)[1h:]) / count_over_time(SLI1[1h:]
 
 Команда семинариста доставляет данные в хранилище, и RPS с временем ответа у неё нет. Главная метрика - время доставки изменения из источника в хранилище: SLO "отставание не больше 3 часов", а SLA - доля потоков, которые сейчас его нарушают. ([01:09:59](https://tbank.ktalk.ru/recordings/gLPiGM1VFenyTLvm3a3p?t=4199)) ([01:12:35](https://tbank.ktalk.ru/recordings/gLPiGM1VFenyTLvm3a3p?t=4355))
 
-Пропущено: определения метрики, код пробера, docker-compose и конфиги Prometheus и Grafana, анонс техтолка, ДЗ.
+> [!note]- Пропущено
+> определения метрики, код пробера, docker-compose и конфиги Prometheus и Grafana, анонс техтолка, ДЗ.

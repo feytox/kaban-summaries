@@ -121,4 +121,5 @@ helm rollback probes-demo 1 -n homework2   # откат - новая ревиз�
 
 ([01:23:00](https://fiit.ktalk.ru/recordings/7Nty0Rsp2R27Jn3Cay5Q?t=4980)) GitHub Actions и GitFlic почти копируют GitLab CI, так что знания переносятся.
 
-Пропущено: виды тестов, истории про забытый сервер и Newtonsoft.Json, история VCS в Контуре, blue-green (есть в L06), ход демо Helm, вопросы про Jenkins, ДЗ.
+> [!note]- Пропущено
+> виды тестов, истории про забытый сервер и Newtonsoft.Json, история VCS в Контуре, blue-green (есть в L06), ход демо Helm, вопросы про Jenkins, ДЗ.

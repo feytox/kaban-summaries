@@ -119,4 +119,5 @@ docker compose exec app sh
 - Redis в примере считается чистым кэшем, поэтому volume ему не дают ([01:06:17](https://fiit.ktalk.ru/recordings/OfDNdQlybbeRYjxjAMgz?t=3977))
 - разнести compose по нескольким VM, по лектору, вряд ли можно, нужно смотреть документацию; про Docker Swarm он не помнит, жив ли тот ([01:11:02](https://fiit.ktalk.ru/recordings/OfDNdQlybbeRYjxjAMgz?t=4262))
 
-Пропущено: отзывы о прошлом ДЗ, показ рабочего Dockerfile лектора, ДЗ.
+> [!note]- Пропущено
+> отзывы о прошлом ДЗ, показ рабочего Dockerfile лектора, ДЗ.

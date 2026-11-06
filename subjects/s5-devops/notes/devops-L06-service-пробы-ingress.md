@@ -126,4 +126,5 @@ curl -H 'Host: web.localhost' http://localhost:8080/   # Host не совпал 
 
 **NetworkPolicy** - фаервол для подов: правила ingress и egress для подов по `podSelector`, действует в пределах namespace и работает по IP, а не по DNS. ([01:29:34](https://fiit.ktalk.ru/recordings/PvwOjMp2SEsSTyNFGVel?t=5374))
 
-Пропущено: отладка зависшего port-forward, поиск, откуда взялся порт 8080, helmfile, ДЗ.
+> [!note]- Пропущено
+> отладка зависшего port-forward, поиск, откуда взялся порт 8080, helmfile, ДЗ.

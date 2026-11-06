@@ -232,4 +232,5 @@ minikube image load <образ>           # иначе minikube не увиди
 
 По куратору, в Kubernetes обычно запускают stateless-сервисы, а СУБД и объектные хранилища чаще живут вне его. Основные команды kubectl нужно знать обязательно. ([01:47:01](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=6421))
 
-Пропущено: этапы эволюции инфраструктуры, детали etcd и cloud-controller-manager, ExternalName, демо OnCall, вопрос про разделение фронта и бэка, ДЗ.
+> [!note]- Пропущено
+> этапы эволюции инфраструктуры, детали etcd и cloud-controller-manager, ExternalName, демо OnCall, вопрос про разделение фронта и бэка, ДЗ.

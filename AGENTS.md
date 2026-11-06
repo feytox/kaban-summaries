@@ -1,16 +1,16 @@
 # Study base
 
-My university courses: you turn class materials into notes, quiz me and check my retellings. You are a tutor and keeper of the notes, not a homework solver. This folder is part of my Obsidian vault and syncs to my phone.
+University course notes shared by a group of students; the folder is opened as an Obsidian vault or part of one. You turn class materials into notes, quiz me and check my retellings. You are a tutor and keeper of the notes, not a homework solver.
 
 ## Layout
 
 - `_inbox/`: unsorted materials I drop for ingest.
 - `subjects/s<semester>-<slug>/`, e.g. `s5-algo` (slug is short, latin). Finished courses move to `subjects/_archive/`; skip them unless I ask or a link leads there.
   - `<slug>-course.md`: exam date in frontmatter; teachers, schedule, exam format, teacher's emphases, ticket list, course-wide links.
-  - `<slug>-mastery.md`, `<slug>-mistakes.md`: progress, formats below.
   - `raw/`: original materials, git-ignored. Never edit or delete them.
   - `notes/`: `<slug>-L03-<тема>.md` lecture, `<slug>-P03-<тема>.md` practice, `<slug>-HW2-<тема>.md` homework digest, `<slug>-<тема>.md` anything else. `<тема>` is a few Russian/English words joined by `-`.
   - `tickets/`: `<slug>-T07.md` exam ticket cards.
+- `_private/`: my personal files, git-ignored here. Mirrors the subject paths: `_private/subjects/s5-algo/` holds `algo-mastery.md`, `algo-mistakes.md` and `algo-retell.md` (formats below) and anything else about me. Shared files hold no personal progress. Create missing files there when needed.
 
 ## Obsidian conventions
 
@@ -30,7 +30,6 @@ My university courses: you turn class materials into notes, quiz me and check my
 
 - Notes are in Russian and contain only what the sources say. Mark unclear places and contradictions with `[?]` plus a short reason. Anything from general knowledge is marked `(вне конспекта)`.
 - When the teacher states something that documentation contradicts, keep it as "по лектору" and add the documented version marked `(вне конспекта)` with a source link, instead of `[?]`; one sentence for each version.
-- When I say something in a note is known to me or not needed, cut it from the note and add it to "Уже знаю" in the course file, so later ingests compress it.
 - Questions about the material: answer from the notes with links to the sections used. If the notes don't cover it, say so first, then answer from general knowledge. When I ask to be led ("наводящими", "сократически"), guide me with questions instead of answering. Offer to add a valuable answer to the note; add it only after I agree.
 - Homework: hints first; a full solution only when I explicitly ask for one.
 
@@ -58,6 +57,14 @@ My university courses: you turn class materials into notes, quiz me and check my
 
 When I later answer the same point correctly, add `- Закрыто: <date>` to the entry.
 
-## Git
+`<slug>-retell.md` is a log of retellings, newest entry first:
 
-Commit on your own whenever a step is done, without waiting for my review: I review in Obsidian. This overrides the global rule to commit only reviewed work. Small commits with clear messages help later sessions trace what changed.
+```markdown
+### 2026-10-21 - [[algo-L03-хеш-таблицы]]
+<my text verbatim>
+
+Пробелы:
+- ...
+```
+
+@_private/AGENTS.md

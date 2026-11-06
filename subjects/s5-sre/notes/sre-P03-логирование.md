@@ -218,4 +218,5 @@ _time:5m status:>=500 | stats count_uniq(host) clients
 
 Алерты: Victoria Logs -> vmalert (выполняет запрос по расписанию) -> Alertmanager (звонки, Telegram). Для панелей есть Grafana-плагин. ([54:20](https://tbank.ktalk.ru/recordings/1uK8BHn4CGk71vj1Vaxw?t=3260))
 
-Пропущено: подробности трёх сбоев, упражнения на поиск проблем и утечек, syslog, OpenSearch, Splunk, Graylog, почему не Postgres и Redis, бенчмарк и ограничения Victoria Logs, демо vmui, внутренняя платформа Т-Банка, ДЗ.
+> [!note]- Пропущено
+> подробности трёх сбоев, упражнения на поиск проблем и утечек, syslog, OpenSearch, Splunk, Graylog, почему не Postgres и Redis, бенчмарк и ограничения Victoria Logs, демо vmui, внутренняя платформа Т-Банка, ДЗ.

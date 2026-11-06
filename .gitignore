@@ -1,2 +1,4 @@
 _inbox/
 raw/
+_private/
+.claude/settings.local.json

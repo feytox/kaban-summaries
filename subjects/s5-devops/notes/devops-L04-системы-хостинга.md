@@ -86,4 +86,5 @@ links:
 
 Kubernetes не управляет виртуалками: ноды готовят другие инструменты (в Контуре - Ansible-роли), в managed-кластере облака - автоматика облака. Для проверки "как моё приложение работает в Kubernetes" есть minikube, kind и k3s, но они не масштабируются на много серверов. ([01:02:42](https://fiit.ktalk.ru/recordings/o6nhS2Und73uVOzFVEaC?t=3762))
 
-Пропущено: история от мейнфреймов и перфокарт, основы YAML, обзор canary (подробно в [[devops-L06-service-пробы-ingress|L06]]), гранты Yandex Cloud, ДЗ.
+> [!note]- Пропущено
+> история от мейнфреймов и перфокарт, основы YAML, обзор canary (подробно в [[devops-L06-service-пробы-ingress|L06]]), гранты Yandex Cloud, ДЗ.
