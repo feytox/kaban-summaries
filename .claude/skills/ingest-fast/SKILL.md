@@ -27,7 +27,7 @@ Work without asking me anything: record doubts as `[?]` in the note and in the f
    - general basics: drop; a bare term in one line if the rest builds on it
    - citations: one per section, where it starts; with timestamped recording links, also one per definition and per paragraph that draws on another moment of the class, never per bullet
    - Russian that reads like a good cheat sheet, neither essay nor telegraph: cut filler, lead-ins ("Ниже...", "X различаются тем, что...") and the obvious, never the subject or verb a sentence needs; check cases and agreement; the line after a heading never continues the heading's phrase; in text, an arrow or a lone bold word never replaces a verb or a clause ("стажёр сломал прод-БД -> выясняют", a bullet that is only a bold phrase), arrows are fine in code comments and tables; no "является", "осуществляется", "обеспечивает", "в рамках"
-   - teacher's stories: drop; a story with a real-world lesson becomes that lesson in one line; hints on what matters or will be on the exam go to "Акценты преподавателя" in the course file
+   - teacher's stories: drop; a story with a real-world lesson becomes that lesson in one line; hints on what matters or will be on the exam go to "Акценты преподавателей" in the course file
    - demos, live coding and exercises: what was done and the key commands, API or code; prefer a code block plus one line over a paragraph that describes code; reconstruct code the teacher read aloud, noting once per note that code is reconstructed; no step-by-step retelling, no task solutions; a demo that only illustrates a conclusion already in the note gets one line, no code
    - proofs and derivations: a one-line idea
    - homework given in a class: skip, just `ДЗ` in the Пропущено callout; I track homework separately
@@ -44,18 +44,25 @@ Work without asking me anything: record doubts as `[?]` in the note and in the f
 
 ## Course file template
 
+Sections in this order; leave out a section until there is something to put in it. Teachers are a table; emphases are bullets grouped under `###` per teacher when there are several.
+
 ```markdown
 ---
 exam:
 ---
 # <Название курса>
 
-- Семестр:
-- Преподаватели:
-- Расписание:
-- Формат экзамена:
-- Акценты преподавателя:
-- Ссылки:
+## Преподаватели
+
+| Кто | Что ведёт | Где работает |
+| --- | --------- | ------------ |
+
+## Расписание
+## Оценка
+## Домашние задания
+## План курса
+## Акценты преподавателей
+## Ссылки
 
 ## Билеты
 
