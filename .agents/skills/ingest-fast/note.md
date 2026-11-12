@@ -18,17 +18,19 @@ The note is what I read instead of the slides and the recording, and the base I 
 - A linked article: only the part the teacher pointed to.
 - General basics: drop, or a bare term in one line if the rest builds on it.
 - Teacher's stories: drop; a story with a real-world lesson becomes that lesson in one line.
-- Demos, live coding and exercises: what was done and the code that carries the idea, without a step-by-step retelling or task solutions.
+- Demos, live coding and exercises: the code that carries the idea, with what was done and the outcome in its comments; no step-by-step retelling or task solutions.
 - Code the teacher read aloud is reconstructed, with one line per note saying so.
 - A demo that only illustrates a conclusion already in the note gets one line, no code.
 - Proofs and derivations: a one-line idea.
 - Homework: just `ДЗ` in Пропущено; I track homework separately.
+- What the sources don't cover is left out, not noted ("не обсуждали", a table row of dashes).
 
 ## Structure
 
 - Before writing, name the 3-6 main ideas of the class: claims about the subject with their reason, not topic titles. Sections follow these ideas, not slide boundaries or the order of talk.
 - A section opens with 1-2 sentences: the idea and why it holds. Then its support (a code block, a table, a definition), then a few remarks on that support.
-- A fact that attaches to no idea goes to Пропущено, not into a catch-all section like "Основы" or "Разное".
+- A fact or rule goes into the section of the idea it serves; one that serves none goes to Пропущено, not into a catch-all section like "Основы", "Правила" or "Разное".
+- A term is defined at its first use in the note, not in a later section.
 - When a section has no idea to state (a run of separate terms each with its code, a comparison the table says in full, a list from a slide), start with the support itself. An opening sentence that only restates the heading, or unrelated facts glued into a paragraph, is worse than no opening.
 - Size the note by how many ideas the class has, not by the length of the transcript: about 100-150 words of text per idea, code blocks not counted, so a class with 3 ideas gives about 400 words. 800 words is a hard limit, not a size to fill.
 - End with a collapsed callout listing what was cut:
@@ -41,6 +43,7 @@ The note is what I read instead of the slides and the recording, and the base I 
 ## Form
 
 - A config, manifest, command, query, log line, API call, etc.: a code block with short comments instead of a description in words.
+- Right and wrong variants of the same code: one code block with a comment per variant, not a table describing them in words.
 - Where the class had no code but the idea needs some, my own example is fine, with one line per note saying some code is mine.
 - Things compared by the same attributes, or many items of one kind: a table; remarks go below as short bullets keyed to the row; an item that gets a row gets no separate line repeating it.
 - A term worth recalling: its own line `**Термин** - одна фраза`. A problem, a cause or a position is not a term. Bold only terms being defined.
@@ -58,7 +61,8 @@ The note is what I read instead of the slides and the recording, and the base I 
 ## Check
 
 After writing, revise the note in place:
-- Ask of every fact whether the sources say it, else mark it `(вне конспекта)`, and whether it helps explain something in `Фокус`, else move it to Пропущено.
+- Ask of every fact whether the sources say it as written: a paraphrase must not add a cause or detail the teacher didn't state. Fix such lines; general knowledge gets `(вне конспекта)`.
+- Ask of every fact whether it helps explain something in `Фокус`, else move it to Пропущено.
 - Count the words of its text without frontmatter, code blocks and citations with a quick script; while over the size its ideas justify, cut the lines I'd miss least when revising for the exam.
 - Every section that has an idea opens with it.
 - A list longer than about 8 bullets is split by the ideas it serves or partly cut.
