@@ -83,7 +83,7 @@ for (var i = 0; i < arr.Length; i++)   // не атомарно, гонка
 
 **Striped locking** - небольшой массив локов, где каждый отвечает за свой диапазон bucket'ов. ([36:36](https://kontur.ktalk.ru/recordings/02Z8x6tNtCZmPk65KhyW?t=2196))
 - писатели блокируют друг друга, только если попали в один диапазон
-- чтение lock-free всегда, даже во время записи; это не [[mtap-L02-блокирующая-синхронизация#ReaderWriterLock|ReaderWriterLock]]
+- чтение lock-free всегда, даже во время записи; это не [[mtap-L02-блокирующая-синхронизация#Semaphore и ReaderWriterLock|ReaderWriterLock]]
 
 Сложность для N элементов и K локов, лектор просил запомнить: ([статья](https://habr.com/ru/companies/skbkontur/articles/348508/))
 
@@ -128,7 +128,7 @@ dict.AddOrUpdate(1, key => 2, (key, oldValue) => oldValue + 1);  // фабрик
 | `ManualResetEvent` | всех, кто ждёт     | вручную через `Reset()` |
 
 - критическую секцию всё равно делают на `lock`: он безопаснее ([01:05:17](https://kontur.ktalk.ru/recordings/02Z8x6tNtCZmPk65KhyW?t=3917))
-- зато событием управляют снаружи: можно копить потоки час и пустить всех разом, чего не умеет [[mtap-L02-блокирующая-синхронизация#Semaphore|семафор]]
+- зато событием управляют снаружи: можно копить потоки час и пустить всех разом, чего не умеет [[mtap-L02-блокирующая-синхронизация#Semaphore и ReaderWriterLock|семафор]]
 - нужны редко
 
 ### Monitor.Wait и Pulse
