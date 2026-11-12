@@ -14,10 +14,15 @@ The note is what I read instead of the slides and the recording, and the base I 
 - The rule on contradicting documentation (AGENTS.md) applies only to facts kept in the note.
 - A list from a slide or a standard source (e.g. the 12 factors) keeps every item; from the talk add only what the slide lacks.
 - An example or number only when the idea rests on it, in a few words ("changes cause 70%+ of failures").
-- Chat Q&A: only an answer that adds a definition or a rule. A linked article: only the part the teacher pointed to. General basics: drop, or a bare term in one line if the rest builds on it.
+- Chat Q&A: only an answer that adds a definition or a rule.
+- A linked article: only the part the teacher pointed to.
+- General basics: drop, or a bare term in one line if the rest builds on it.
 - Teacher's stories: drop; a story with a real-world lesson becomes that lesson in one line.
-- Demos, live coding and exercises: what was done and the code that carries the idea; reconstruct code the teacher read aloud, noting once per note that code is reconstructed; no step-by-step retelling, no task solutions. A demo that only illustrates a conclusion already in the note gets one line, no code.
-- Proofs and derivations: a one-line idea. Homework: just `ДЗ` in Пропущено; I track homework separately.
+- Demos, live coding and exercises: what was done and the code that carries the idea, without a step-by-step retelling or task solutions.
+- Code the teacher read aloud is reconstructed, with one line per note saying so.
+- A demo that only illustrates a conclusion already in the note gets one line, no code.
+- Proofs and derivations: a one-line idea.
+- Homework: just `ДЗ` in Пропущено; I track homework separately.
 
 ## Structure
 
@@ -35,22 +40,30 @@ The note is what I read instead of the slides and the recording, and the base I 
 
 ## Form
 
-- A config, manifest, command, query, log line or API call: a code block with short comments instead of a description in words. My own example is fine when the class had none, with one line per note saying some code is mine; no code that only decorates a topic without code.
+- A config, manifest, command, query, log line, API call, etc.: a code block with short comments instead of a description in words.
+- Where the class had no code but the idea needs some, my own example is fine, with one line per note saying some code is mine.
 - Things compared by the same attributes, or many items of one kind: a table; remarks go below as short bullets keyed to the row; an item that gets a row gets no separate line repeating it.
 - A term worth recalling: its own line `**Термин** - одна фраза`. A problem, a cause or a position is not a term. Bold only terms being defined.
 - A paragraph makes one point in 1-2 sentences; a third sentence usually is a second point or a detail to cut.
-- A remark: a bullet with one fact, about 100 characters. Two facts joined by `;` become two bullets or a sentence; a point with parts is a short parent bullet with nested ones.
+- A remark: a bullet with one fact, about 100 characters; two facts joined by `;` become two bullets or a sentence.
+- A point with parts is a short parent bullet with nested ones.
 - Machine transcripts mishear terms: fix obvious ones silently ("кубер нейтс" -> Kubernetes); `[?]` only when the meaning itself is in doubt.
-- Russian that reads like a good cheat sheet, neither essay nor telegraph: cut filler, lead-ins ("Ниже...", "X различаются тем, что...") and the obvious, never the subject or verb a sentence needs; check cases and agreement; the line after a heading never continues the heading's phrase; in text, an arrow or a lone bold word never replaces a verb; no "является", "осуществляется", "обеспечивает", "в рамках".
+- Russian that reads like a good cheat sheet, neither essay nor telegraph: cut filler, lead-ins ("Ниже...", "X различаются тем, что...") and the obvious, never the subject or verb a sentence needs.
+- The line after a heading starts its own sentence, not a continuation of the heading's phrase.
+- In text, a verb carries the claim: no arrow or lone bold word in its place.
+- No officialese: "является", "осуществляется", "обеспечивает", "в рамках", etc.
 - Wikilinks wherever a concept from another note is used, in this subject or another one, `_archive/` included.
-- Citations: one per section, where it starts; with timestamped recording links, also one per definition and per paragraph that draws on another moment of the class, never per bullet.
+- Citations: one where a section starts, plus one per definition and per paragraph that draws on another moment of a timestamped recording. Bullets carry none: a fact that needs a citation of its own becomes a paragraph.
 
 ## Check
 
 After writing, revise the note in place:
-- Ask of every fact whether it helps explain something in `Фокус`; move the ones that don't to Пропущено.
+- Ask of every fact whether the sources say it, else mark it `(вне конспекта)`, and whether it helps explain something in `Фокус`, else move it to Пропущено.
 - Count the words of its text without frontmatter, code blocks and citations with a quick script; while over the size its ideas justify, cut the lines I'd miss least when revising for the exam.
-- Every section that has an idea opens with it; a list longer than about 8 bullets is split by the ideas it serves or partly cut; no bullet carries two facts.
+- Every section that has an idea opens with it.
+- A list longer than about 8 bullets is split by the ideas it serves or partly cut.
+- No bullet carries two facts.
+- Find bullets with citations: `grep -nE '^\s*- .*(\?t=[0-9]|#page=|-transcript\|)' <note>`. Drop a citation when the section's own citation already leads to that part of the source; otherwise turn the bullet into a paragraph that keeps it.
 - Fix every line that lacks a subject or verb it needs, uses an arrow or a lone bold word instead of a verb, or breaks case or agreement.
 
 ## Examples

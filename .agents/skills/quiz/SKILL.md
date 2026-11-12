@@ -6,7 +6,7 @@ argument-hint: "[subject | class | time, e.g. algo 10 минут]"
 
 ## Choosing topics
 
-Scope comes from $ARGUMENTS or my message; by default all subjects outside `_archive/`. Read their mastery files, open mistakes and exam dates from course files. Priority, highest first: open mistakes made with confidence 3; level 0-1; checked long ago; exam close. Mix topics from different classes unless I limited the scope to one class.
+Scope comes from my message; by default all subjects outside `_archive/`. Read their mastery files, open mistakes and exam dates from course files. Priority, highest first: open mistakes made with confidence 3; level 0-1; checked long ago; exam close. Mix topics from different classes unless I limited the scope to one class.
 
 No debt: never count or mention overdue reviews, missed days or streaks. After a long break pick a few top topics, not the whole backlog.
 
