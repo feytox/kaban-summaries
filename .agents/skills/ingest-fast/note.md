@@ -62,6 +62,7 @@ The note is what I read instead of the slides and the recording, and the base I 
 
 After writing, revise the note in place:
 - Ask of every fact whether the sources say it as written: a paraphrase must not add a cause or detail the teacher didn't state. Fix such lines; general knowledge gets `(вне конспекта)`.
+- Compare each claim of the teacher about how a technology behaves with its documentation; a mismatch goes by the rule in AGENTS.md.
 - Ask of every fact whether it helps explain something in `Фокус`, else move it to Пропущено.
 - Count the words of its text without frontmatter, code blocks and citations with a quick script; while over the size its ideas justify, cut the lines I'd miss least when revising for the exam.
 - Every section that has an idea opens with it.

@@ -16,7 +16,7 @@ University course notes shared by a group of students; the folder is opened as a
 
 - Every file in a subject, `raw/` included, is named with the slug prefix: wikilinks resolve by file name across the whole vault, and every subject has its own L03. No `# ^ [ ] |` in file names.
 - Nested list items are indented with a tab, not spaces: Obsidian renders space indents too narrow.
-- Internal links are wikilinks. Cite sources inline right after the paragraph or formula they support: `([[algo-L03-slides.pdf#page=12|с. 12]])` for files. For a recording whose URL supports timestamps, link the recording at that moment, e.g. Толк (`*.ktalk.ru`) with `?t=<seconds>`: `([12:40](https://kontur.ktalk.ru/recordings/<id>?t=760))`; otherwise the transcript: `([[algo-L03-transcript|12:40]])`. When the class has a timestamped recording, cite only the recording: links to slides or code files clutter the note and I don't open them.
+- Internal links are wikilinks. Cite sources inline right after the paragraph or formula they support: `([[algo-L03-slides.pdf#page=12|с. 12]])` for files. For a recording whose URL supports timestamps, link the recording at that moment, e.g. Толк (`*.ktalk.ru`) with `?t=<seconds>`: `([12:40](https://kontur.ktalk.ru/recordings/<id>?t=760))`, Google Drive (`drive.google.com/file/d/<id>/view`) with `?t=<m>m<s>s`; otherwise the transcript: `([[algo-L03-transcript|12:40]])`. When the class has a timestamped recording, cite only the recording: links to slides or code files clutter the note and I don't open them.
 - Note frontmatter:
   ```yaml
   date: 2026-10-21      # date of the class, if known

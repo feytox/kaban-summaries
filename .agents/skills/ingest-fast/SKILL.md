@@ -17,6 +17,7 @@ Work without asking me anything: record doubts as `[?]` in the note and in the f
 5. Process classes one at a time: read the class's sources in full (PDFs 20 pages per Read), write its note, then move to the next.
 6. Write the note `notes/<slug>-L03-<тема>.md` with frontmatter `ingest: fast` by `note.md` in this folder; read it before the first note.
 7. A class that had a note before, even one I deleted to redo: keep its file name unless the topic changed, then fix links to it and its headings that no longer resolve: `grep -rn '<old-name>' subjects _private`.
+	- A note I deleted to redo is written from the sources only: don't read the old version, git history included.
 8. Update the `Фокус` line of the course file when the class shows the course teaches more or something else than it says: the focus is unknown at the start and grows over the semester. Keep it one sentence.
 9. Add the class's topics to mastery (format: `.agents/progress-formats.md`): 2-5 per class, each narrow enough for one quiz question set, level 0, checked `-`. A class that already has rows: rewrite them to fit the new note, keeping levels and dates.
 10. Remove the processed entries from `_inbox/inbox.md` with Edit right after re-reading it: I add entries during the session.
