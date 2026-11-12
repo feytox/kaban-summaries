@@ -1,236 +1,226 @@
 ---
 date: 2026-09-25
-ingest: full
+ingest: fast
 links:
-  - https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view
+  - https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?usp=sharing
 ---
 # P02. Основы Kubernetes
 
-Манифесты сокращены, часть примеров составлена мной.
+Манифесты со слайдов и из архива семинара, сокращены.
 
-## Зачем Kubernetes
+## От серверов к оркестратору
 
-**Контейнер** - обычный процесс на хосте, изолированный cgroups и namespaces; ядро общее с хостом, это не VM. ([11:03](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=663))
+Каждый этап инфраструктуры решал проблему предыдущего. ([[sre-P02-transcript|05:19]])
 
-Когда контейнеров сотни на многих серверах, вручную ими не управлять. Оркестратор берёт на себя балансировку, перезапуск упавшего, обновление без простоя, сеть и хранилище. ([14:54](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=894))
+| Этап          | Как устроен                                    | Что мешало                              |
+| ------------- | ---------------------------------------------- | --------------------------------------- |
+| Физ. серверы  | один сервер - одно приложение                  | железо простаивает, нет изоляции        |
+| Виртуализация | гипервизор запускает несколько ОС на сервере   | накладные расходы на каждую гостевую ОС |
+| Контейнеры    | общее ядро хоста, изоляция на уровне процессов | множеством контейнеров трудно управлять |
 
-Почему Kubernetes стал стандартом: ([18:17](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=1097))
-- вырос из внутренних систем Google (Borg, Omega), то есть вышел уже проверенным на огромной нагрузке
-- расширяется на любом уровне: CRD, операторы, CNI, CSI
-- **декларативный**: описываешь желаемое состояние, он приводит к нему кластер и следит, чтобы оно сохранялось
+**Контейнер** - обычный процесс на хосте, ограниченный cgroups и namespaces, поэтому он лёгкий и быстро стартует. ([[sre-P02-transcript|11:03]])
 
-## Архитектура
+Когда контейнеров сотни на многих серверах, нужен оркестратор с пятью задачами: балансировка, восстановление упавших, обновление без даунтайма с откатом, сеть с обращением по имени, хранилище, переживающее перезапуск. ([[sre-P02-transcript|14:54]])
 
-([21:40](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=1300))
+Kubernetes стал стандартом, потому что: ([[sre-P02-transcript|18:17]])
+1. Зародился в Google на опыте Borg и Omega.
+2. Расширяем (свои типы ресурсов, CRD; операторы; CNI, CSI) и оброс экосистемой.
+3. Описывает систему декларативно.
 
-| Компонент          | Где           | Роль                                                |
-| ------------------ | ------------- | --------------------------------------------------- |
-| etcd               | control plane | key-value хранилище всего состояния кластера        |
-| API server         | control plane | единственный вход в кластер, только он пишет в etcd |
-| Controller manager | control plane | контроллеры приводят объекты к манифестам           |
-| Scheduler          | control plane | выбирает ноду для нового пода                       |
-| kubelet            | каждая нода   | запускает контейнеры подов через CRI                |
-| kube-proxy         | каждая нода   | сетевые правила (iptables, IPVS) для Service        |
+## Желаемое состояние и control loop
 
-- все компоненты, кроме etcd, stateless, поэтому их можно перезапускать и масштабировать
-- контроллер - **control loop**: сверяет реальное состояние с желаемым постоянно, а не только при `apply` ([26:09](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=1569))
-- Scheduler сам ничего не запускает: отсеивает ноды без ресурсов, учитывает affinity и пишет в под `nodeName` ([27:31](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=1651))
-- kubelet - единственный компонент, который работает не в контейнере, а обычным системным процессом
-- kube-proxy можно заменить CNI-плагином (Cilium, Calico)
-- в облачных кластерах есть ещё cloud-controller-manager: создаёт ноды, балансировщики и диски через API облака
+**Декларативность** - описываем желаемое состояние, а Kubernetes сам приводит к нему систему и дальше следит за ним. ([[sre-P02-transcript|17:41]])
 
-Запуск пода: ([01:29:01](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=5341))
+Состояние лежит только в etcd, остальные компоненты его не хранят, поэтому их можно перезапускать и масштабировать горизонтально. ([[sre-P02-transcript|23:22]])
 
+| Компонент                | Где     | Роль                                                              |
+| ------------------------ | ------- | ----------------------------------------------------------------- |
+| etcd                     | control | распределённое консистентное key-value хранилище состояния        |
+| API-server               | control | REST API, единственный ходит в etcd; аутентификация, авторизация  |
+| Controller Manager       | control | контроллеры сверяют реальное состояние с манифестами              |
+| Scheduler                | control | назначает поды на ноды по ресурсам, affinity, приоритету          |
+| cloud-controller-manager | control | в облаке создаёт ноды, балансировщики, диски через API провайдера |
+| kubelet                  | data    | на каждой ноде запускает поды через CRI и перезапускает упавшие   |
+| kube-proxy               | data    | реализует Service правилами iptables или IPVS                     |
+
+Компоненты следят (watch) за изменениями через API-server и через него же пишут результат. Запуск пода по слайду: ([[sre-P02-transcript|01:29:01]])
+
+```text
+user -> API: create ReplicaSet             -> etcd
+Controller Manager видит новый ReplicaSet  -> API: создать поды -> etcd
+Scheduler видит поды без nodeName          -> API: bind на ноду -> etcd
+kubelet ноды видит свой под                -> docker run -> статус в API -> etcd
 ```
-kubectl -> API server -> etcd
-  -> контроллер создаёт под
-  -> Scheduler записывает nodeName
-  -> kubelet этой ноды запускает контейнеры, статус обратно через API server
+
+В kubectl `create` императивна, а `apply` декларативна. ([[sre-P02-transcript|01:32:12]])
+
+```bash
+kubectl create -f file.yaml           # только создаёт; если объект есть - ошибка
+kubectl apply -f file.yaml            # создаст или обновит; повторять безопасно
+kubectl get pod -o wide
+kubectl describe pod my-pod
+kubectl exec -it my-pod -- /bin/sh    # оболочка в контейнере; безопасники часто запрещают
+kubectl logs my-pod -c sidecar        # логи из stdout; -c выбирает контейнер пода
+kubectl set image deployment my-deployment nginx=nginx:1.13
+kubectl delete -f file.yaml
 ```
 
-## Pod
+## Под одноразовый, его держат контроллеры
 
-**Pod** - минимальная единица развёртывания: один или несколько тесно связанных контейнеров с общим IP и портами. ([36:03](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=2163))
+**Pod** - минимальная единица развёртывания: тесно связанные контейнеры с общим IP и портами, по сути группа процессов на ноде. ([[sre-P02-transcript|36:07]])
+
+**Sidecar** - контейнер рядом с основным, который дополняет его, не вмешиваясь: логер, прокси, агент мониторинга. ([[sre-P02-transcript|38:20]])
+
+**Init-контейнер** - запускается до основных, последовательно и один раз; пока он не завершится успешно, основной не стартует.
+
+Упавший под Kubernetes сам не пересоздаст, поэтому поды вручную не создают: их держат контроллеры. ([[sre-P02-transcript|40:59]])
 
 ```yaml
-kind: Pod
-spec:
-  initContainers:          # по очереди и до основных; упал -> основные не стартуют
-    - name: migrate
-      image: app:1.2
-      command: ["app", "migrate"]
-  containers:              # друг к другу ходят через localhost
-    - name: app
-      image: app:1.2
-    - name: log-agent      # sidecar: дополняет основной, не вмешиваясь в его работу
-      image: vector
-```
-
-- **sidecar** - вспомогательный контейнер рядом с основным: сборщик логов, прокси, агент мониторинга ([38:20](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=2300))
-- **init-контейнер** - готовит окружение и завершается: директории, проверка БД
-- под одноразовый: если упала нода, он не пересоздастся, поэтому поды создают через контроллеры, а не вручную ([40:59](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=2459))
-
-## Контроллеры
-
-**Deployment** - держит N подов через ReplicaSet, обновляет без простоя и откатывает; основная абстракция для приложений. ([45:25](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=2725))
-
-```yaml
+apiVersion: apps/v1
 kind: Deployment
+metadata:
+  name: mydeployment
 spec:
   replicas: 3
   selector:
-    matchLabels: {app: web}   # свои поды ищет по labels
+    matchLabels:
+      app: myapp           # свои поды контроллер находит по лейблам
   template:
     metadata:
-      labels: {app: web}      # обязаны совпасть с selector
+      labels:
+        app: myapp         # должны совпадать с селектором
     spec:
       containers:
-        - name: web
-          image: web:1.2      # новый тег + apply = обновление
+      - name: nginx
+        image: nginx:1.29.1
   strategy:
-    type: RollingUpdate       # Recreate - убить все и поднять заново
-    rollingUpdate: {maxSurge: 1, maxUnavailable: 1}   # меняет поды по одному
+    type: RollingUpdate    # или Recreate
+    rollingUpdate:
+      maxSurge: 1          # не больше 1 пода сверх replicas
+      maxUnavailable: 1    # не больше 1 недоступного
 ```
 
-- голый ReplicaSet новый образ к живым подам не применяет: обновятся только пересозданные ([44:24](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=2664))
-- после обновления старый ReplicaSet остаётся с 0 реплик, на него и откатываются
+| Контроллер  | Что держит                                     | Для чего                            |
+| ----------- | ---------------------------------------------- | ----------------------------------- |
+| ReplicaSet  | ровно `replicas` подов с нужными лейблами      | самоисцеление                       |
+| Deployment  | ReplicaSet'ы, через них поды                   | stateless-приложения                |
+| StatefulSet | поды с постоянными номером, DNS-именем и томом | БД и другие приложения с состоянием |
+| DaemonSet   | по поду на каждой ноде                         | агенты мониторинга и логов, CNI     |
+| Job         | поды до успеха или лимита попыток              | миграции БД, разовые задачи         |
+| CronJob     | Job по расписанию crontab                      | периодические задачи                |
 
-| Контроллер  | Для чего                      | Особенность                                                     |
-| ----------- | ----------------------------- | --------------------------------------------------------------- |
-| Deployment  | stateless-приложения          | поды взаимозаменяемы, имена случайные                           |
-| StatefulSet | приложения с состоянием, БД   | номер пода (`mysql-0`), свои DNS-имя и том, создание по порядку |
-| DaemonSet   | агенты: логи, мониторинг, CNI | по поду на каждой ноде, включая новые                           |
+- ReplicaSet при смене образа старые поды не трогает
+- Deployment при смене образа создаёт новый ReplicaSet, старый остаётся с 0 подов
+- StatefulSet создаёт поды по порядку номеров, удаляет в обратном
+- сбор логов DaemonSet'ом: [[sre-P03-логирование#Сбор и доставка]]
 
-([51:46](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=3106))
+## Конфигурация отдельно от образа
 
-**Job** - запускает поды разовой задачи (миграции, отчёты), пока она не завершится успешно или не кончатся попытки. ([53:49](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=3229))
-
-```yaml
-kind: Job
-spec:
-  backoffLimit: 4              # попыток до Failed; без лимита сломанная задача крутилась бы вечно
-  activeDeadlineSeconds: 60    # работает дольше -> DeadlineExceeded
-  template:
-    spec:
-      restartPolicy: Never
-      containers: [...]
----
-kind: CronJob
-spec:
-  schedule: "0 * * * *"        # crontab: каждый час
-  jobTemplate: {...}           # внутри обычный Job
-```
-
-## Конфигурация
-
-**Namespace** - логическая группа ресурсов в кластере, например под окружение; по умолчанию `default`. ([56:47](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=3407))
-
-**ConfigMap** - конфигурация ключ-значение отдельно от образа, чтобы один образ работал во всех окружениях. **Secret** - то же для паролей, токенов registry и TLS-сертификатов. ([58:01](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=3481))
+Один образ запускают во всех окружениях, а различия (адреса БД, креды, домены) лежат в ConfigMap, как требует фактор 3 из [[sre-P01-devops-sre-12-факторов#Конфигурация и окружение]]. ([[sre-P02-transcript|58:01]])
 
 ```yaml
+apiVersion: v1
 kind: ConfigMap
-metadata: {name: app-config}
+metadata:
+  name: myconfigmap
 data:
-  LOG_LEVEL: info
+  username: k8s-admin
+  access_level: "1"
 ---
-# контейнер пода
-envFrom:
-  - configMapRef: {name: app-config}    # все ключи -> env; нет такого ConfigMap -> под не стартует
-env:
-  - name: DB_PASSWORD
-    valueFrom:
-      secretKeyRef: {name: db, key: password}
-volumeMounts:
-  - {name: config, mountPath: /etc/nginx/conf.d/}   # ConfigMap файлами
-volumes:
-  - name: config
-    configMap: {name: nginx-config}
+# в контейнере пода, два способа
+envFrom:                     # 1. ключи как переменные окружения
+- configMapRef:
+    name: myconfigmap
+volumeMounts:                # 2. ключи как файлы; том config ссылается на ConfigMap
+- name: config
+  mountPath: /etc/nginx/conf.d/
 ```
 
-- файл из ConfigMap обновляется без перезапуска пода, но приложение должно само его перечитать; это может делать sidecar
-- Secret только кодируется в Base64, не шифруется: `kubectl get secret db -o yaml` покажет значение ([01:05:16](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=3916))
-- защита Secret: шифрование etcd (только на диске), RBAC, внешние Vault или Sealed Secrets
+Файл из тома обновляется без перезапуска пода, но приложение должно само заметить изменение; nginx за файлом не следит, сигнал ему может подавать sidecar. Без ConfigMap под не запустится. ([[sre-P02-transcript|01:00:31]])
 
-## Хранение
+**Secret** - объект для паролей, токенов, доступа к docker-registry и TLS-сертификатов. ([[sre-P02-transcript|01:03:25]])
 
-| Том          | Где данные                     | Живут                                     |
-| ------------ | ------------------------------ | ----------------------------------------- |
-| emptyDir     | на ноде, сначала пусто         | пока жив под; для кэша и временных файлов |
-| hostPath     | в директории ноды              | на ноде; под на другой ноде их не видит   |
-| PV через PVC | хранилище кластера (диск, NFS) | независимо от пода                        |
+Secret не шифрует, а только кодирует в base64. Защищают его шифрованием etcd, ограничением доступа через RBAC или внешними хранилищами вроде Vault. ([[sre-P02-transcript|01:05:16]])
 
-([01:07:14](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=4034))
+## Где живут данные
 
-**PersistentVolume (PV)** - конкретное хранилище кластера. **PersistentVolumeClaim (PVC)** - заявка на хранилище нужного StorageClass и объёма; привязанный PV получает статус `Bound`, и под монтирует PVC как том. ([01:10:10](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=4210))
+В Kubernetes обычно запускают stateless-сервисы, а СУБД и объектные хранилища держат вне его, по Мусину. ([[sre-P02-transcript|01:47:29]])
 
-## Сеть
+| Том          | Где данные                       | Сколько живут                |
+| ------------ | -------------------------------- | ---------------------------- |
+| hostPath     | каталог на ноде                  | дольше пода, но на этой ноде |
+| emptyDir     | RAM или диск ноды, сначала пуст  | пока жив под; для кэша       |
+| PV через PVC | диск или внешнее хранилище (NFS) | независимо от пода           |
 
-**Service** - постоянный IP и DNS-имя для группы подов с балансировкой между ними. Нужен, потому что IP пода меняется при каждом перезапуске. ([01:14:19](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=4459))
+- при переезде пода на другую ноду данные hostPath теряются
+
+**PersistentVolume (PV)** - хранилище, доступное кластеру. ([[sre-P02-transcript|01:10:10]])
+
+**PersistentVolumeClaim (PVC)** - заявка на хранилище нужного класса и объёма.
+
+**StorageClass** - тип хранилища, зарегистрированный администратором.
+
+Пользователь создаёт PVC, контроллеры привязывают к ней подходящий PV (статус Bound, только к одной PVC), и под ссылается на PVC. ([[sre-P02-transcript|01:11:44]])
+
+## Сеть: Service и Gateway API
+
+IP пода меняется при перезапуске, а реплик несколько. **Service** даёт группе подов стабильный IP и DNS-имя и балансирует трафик между ними. ([[sre-P02-transcript|01:14:19]])
+
+**Namespace** - логическая группа ресурсов кластера, например окружение; без указания ресурс попадает в `default`. ([[sre-P02-transcript|56:47]])
 
 ```yaml
+apiVersion: v1
 kind: Service
-metadata: {name: web}
+metadata:
+  name: myservice
 spec:
-  type: NodePort         # по умолчанию ClusterIP
-  selector: {app: web}   # трафик идёт на поды с этим label
+  selector:
+    app: myapp        # поды Deployment'а
   ports:
-    - port: 30080        # порт Service
-      targetPort: 8080   # порт в поде
-# DNS: web.<namespace>.svc.cluster.local
+  - protocol: TCP
+    port: 80          # порт сервиса
+    targetPort: 80    # порт в поде
+# DNS: myservice.default.svc.cluster.local
 ```
 
-| Тип          | Доступен                     | Когда                               |
-| ------------ | ---------------------------- | ----------------------------------- |
-| ClusterIP    | только внутри кластера       | связь сервисов между собой          |
-| NodePort     | + снаружи через порт на ноде | доступ в minikube                   |
-| LoadBalancer | + через балансировщик облака | облако; платный, легко раздуть счёт |
+| Тип                      | Где виден                                           |
+| ------------------------ | --------------------------------------------------- |
+| ClusterIP (по умолчанию) | только внутри кластера                              |
+| NodePort                 | на порту ноды, например в minikube                  |
+| LoadBalancer             | снаружи через балансировщик облака, он платный      |
+| Headless                 | без своего IP: DNS отдаёт IP подов, для StatefulSet |
 
-([01:15:41](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=4541))
+ExternalName лектор отнёс к доступу через внешний балансировщик; по [документации](https://kubernetes.io/docs/concepts/services-networking/service/#externalname) это DNS-псевдоним (CNAME) на внешнее имя (вне конспекта).
 
-NodePort по семинаристу открывает порт на ноде, где запущена нагрузка. По документации он построен поверх ClusterIP и открывает один и тот же порт (по умолчанию 30000-32767) на каждой ноде ([документация](https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport)) (вне конспекта).
-
-**Headless Service** - Service без своего IP (`clusterIP: None`): DNS отдаёт адреса всех подов, у каждого пода своё имя. Нужен для обращения к конкретному поду, обычно со StatefulSet. ([01:20:08](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=4808))
-
-**Gateway API** - CRD для входа внешнего трафика в кластер, замена устаревшему Ingress. Service балансирует внутри кластера, Gateway принимает трафик снаружи: они дополняют друг друга. ([01:21:42](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=4902))
+**Gateway API** - набор CRD для входа внешнего трафика в кластер, сменил Ingress. Gateway встречает запросы снаружи и маршрутизирует, а Service балансирует уже внутри. ([[sre-P02-transcript|01:21:42]])
 
 ```yaml
-kind: Gateway                 # точка входа
-metadata: {name: prod-web}
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway                 # точка входа, по сути балансировщик
+metadata:
+  name: prod-web
 spec:
-  gatewayClassName: envoy     # какой балансировщик
+  gatewayClassName: envoy     # какой балансировщик за ним
   listeners:
-    - {protocol: HTTP, port: 80, name: http,
-       allowedRoutes: {namespaces: {from: Same}}}   # маршруты только из своего namespace
+  - protocol: HTTP
+    port: 80
+    name: prod-web-gw
+    allowedRoutes:
+      namespaces:
+        from: Same            # маршруты только из своего namespace
 ---
-kind: HTTPRoute               # куда вести трафик
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute               # куда направить трафик: по пути, заголовкам, методу
+metadata:
+  name: foo
 spec:
-  parentRefs: [{name: prod-web}]
+  parentRefs:
+  - name: prod-web
   rules:
-    - backendRefs: [{name: foo-svc, port: 8080}]    # дальше Service -> поды
+  - backendRefs:
+    - name: foo-svc           # Service, за ним поды
+      port: 8080
 ```
-
-## kubectl
-
-| Команда          | Подход        | Если объект уже есть           |
-| ---------------- | ------------- | ------------------------------ |
-| `kubectl create` | императивный  | ошибка                         |
-| `kubectl apply`  | декларативный | обновит или скажет "unchanged" |
-
-([01:32:12](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=5532))
-
-```bash
-kubectl apply -f k8s/
-kubectl get all -n <ns>
-kubectl describe pod <pod>
-kubectl exec -it <pod> -- sh          # в проде часто запрещён: неконтролируемый доступ
-kubectl logs <pod> -c <container>     # только stdout; -c, если в поде есть sidecar
-kubectl scale deployment <name> --replicas 3
-kubectl set image deployment <name> web=web:1.3
-kubectl port-forward svc/<name> 8888:8080
-minikube image load <образ>           # иначе minikube не увидит локально собранный образ
-```
-
-По куратору, в Kubernetes обычно запускают stateless-сервисы, а СУБД и объектные хранилища чаще живут вне его. Основные команды kubectl нужно знать обязательно. ([01:47:01](https://drive.google.com/file/d/1xjumD3HXVFcw_qsdi4eGqglLI7u1QWWy/view?t=6421))
 
 > [!note]- Пропущено
-> этапы эволюции инфраструктуры, детали etcd и cloud-controller-manager, ExternalName, демо OnCall, вопрос про разделение фронта и бэка, ДЗ.
+> карьера семинариста, байка про сисадмина и ночные выкладки, снапшоты и миграция VM, год выпуска Kubernetes, kubelet вне контейнера, замена kube-proxy на eBPF, формат имён подов, детали Job (backoffLimit, activeDeadlineSeconds) и манифест DaemonSet node-exporter, пробы и ресурсы в манифестах архива, способы защиты Secret подробно, Ingress, TLS и аутентификация на Gateway, демо приложения oncall в minikube, вопросы про фронт и бэк в разных контейнерах, ДЗ.
