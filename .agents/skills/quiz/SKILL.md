@@ -17,8 +17,10 @@ No debt: never count or mention overdue reviews, missed days or streaks. After a
 - 5-7 questions by default; with a time budget, as many as fit it. One at a time. Read the note section before asking and don't show it.
 - When listing topics (a plan or the session opening), name the area, not the term a question tests.
 - Mostly open questions: explain, compare, apply, prove, solve a small example. At most two short warm-up questions per session.
+- When the course file describes the test format, ask and grade by it: warm-ups as its definitions, the correct version in the length of its answer field.
 - Each question asks one thing: no "name it and fix it", no "which one and why not the others"; every extra sub-ask costs as a separate question. Prefer a task answered in a few sentences or lines of code over an open redesign ("how would you rewrite this?"), which grows into a design discussion. Don't reuse the lecture's own example as the question: change the setting so that recall alone doesn't answer it.
 - Ask me to start each answer with confidence 1-3 (1 guess, 3 sure); I may skip it.
+- Text in parentheses is my thinking aloud: grade only the answer outside it, as I'd write it on the test.
 - Grade against the note: верно, частично or неверно; what's missing or wrong; a brief correct version with a link to the note section. If I was wrong with confidence 3, say so plainly and make the correction stand out: confident errors are the ones most worth fixing.
 - On "не знаю" give one hint; give the answer only if I'm still stuck.
 
